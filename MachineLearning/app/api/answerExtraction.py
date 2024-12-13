@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
+from app.services.answerExtraction import extractAnswerSummary
 
 router = APIRouter()
 
@@ -12,4 +13,5 @@ class ResponseModel(BaseModel):
 @router.get("/extractanswer", response_model=ResponseModel)
 def extractAnswer(request: RequestModel):
     print(request)
-    return {"answer": request.question}
+    answerSummary = extractAnswerSummary(request.question)
+    return {"answer": answerSummary}
