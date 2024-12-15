@@ -63,9 +63,9 @@ def extractAnswerSummary(query):
     k = 3  # Number of most similar chunks to retrieve
     distances, indices = index.search(query_embedding, k)
 
+    result = []
     # Step 3: Retrieve and print the results
     print("Top results:")
     for idx, distance in zip(indices[0], distances[0]):
-        print(idx)
-        print(data_chunks[idx])
-    return "done"
+        result.append(data_chunks[idx])
+    return result[0]
