@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const { default: axios } = require('axios');
 
 dotenv.config();
 
@@ -25,7 +26,12 @@ io.on('connection', (socket) => {
     });
 
     socket.on('user_message', (message) => {
-        socket.emit('bot_message', "Bot message for user message: " + message);
+        axios.post(`${process.env.MACHINE_LEARNING_API_HOST}/extractanswer`, { question: message }).then((response)=>{
+            socket.emit('bot_message', response.data.answer);
+        }).catch((err)=>{
+            console.log(err);
+            socket.emit('bot_message', "answer extraction failed");
+        })
     });
 });
 

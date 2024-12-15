@@ -10,7 +10,7 @@ class RequestModel(BaseModel):
 class ResponseModel(BaseModel):
     answer: str
 
-@router.get("/extractanswer", response_model=ResponseModel)
+@router.post("/extractanswer", response_model=ResponseModel)
 def extractAnswer(request: RequestModel):
     print(request)
     answerSummary = extractAnswerSummary(request.question)
