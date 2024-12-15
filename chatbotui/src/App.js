@@ -1,9 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './index.css';
+import io from 'socket.io-client';
+
+const socket = io(`http://localhost:4000`);
 
 const App = () => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
+
+  useEffect(() => {
+    // Listen for messages from the server
+    socket.on("bot_message", (botMessage) => {
+        setMessages(prevMessages => [...prevMessages, { text: botMessage, sender: 'bot' }]);
+    });
+
+    // Clean up the listener
+    return () => {
+        socket.off("bot_message");
+    };
+  }, []);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
@@ -13,13 +28,7 @@ const App = () => {
     const newMessages = [...messages, { text: inputMessage, sender: 'user' }];
     setMessages(newMessages);
 
-    // Simulate bot response
-    setTimeout(() => {
-      setMessages([
-        ...newMessages,
-        { text: `Bot: I received your message: "${inputMessage}"`, sender: 'bot' }
-      ]);
-    }, 1000);
+    socket.emit('user_message', inputMessage);
 
     setInputMessage('');
   };
