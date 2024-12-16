@@ -1,10 +1,7 @@
 from fastapi import FastAPI
 from app.api import answerExtraction  
 from app.services.answerExtraction import preprocess_resources
-from dotenv import load_dotenv
 import os
-
-load_dotenv()
 
 app = FastAPI()
 
