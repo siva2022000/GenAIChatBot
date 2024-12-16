@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.api import answerExtraction  
-from app.services.answerExtraction import preprocess_handbook
+from app.services.answerExtraction import preprocess_resources
 from dotenv import load_dotenv
 import os
 
@@ -10,10 +10,10 @@ app = FastAPI()
 
 app.include_router(answerExtraction.router)
 
-handbook_dir = "../resources/handbook/content/handbook"
-print("Preprocessing handbook")
-# data_chunks = preprocess_handbook(handbook_dir)
-print("Preprocessing handbook done")
+print("Preprocessing resources")     
+if(os.getenv("PROCESS_RESOURCES") == "true"):
+    preprocess_resources()
+print("Preprocessing resources done")
 
 @app.get("/")
 async def root():
