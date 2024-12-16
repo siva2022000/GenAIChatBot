@@ -15,7 +15,7 @@ app.use(express.json());
 const httpServer = http.createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: "http://localhost:3000",
+        origin: process.env.FRONTEND_HOST,
         methods: ["GET", "POST"]
     },
 });
@@ -29,7 +29,7 @@ io.on('connection', (socket) => {
         axios.post(`${process.env.MACHINE_LEARNING_API_HOST}/extractanswer`, { question: message }).then((response)=>{
             socket.emit('bot_message', response.data.answer);
         }).catch((err)=>{
-            console.log(err);
+            // console.log(err);
             socket.emit('bot_message', "answer extraction failed");
         })
     });

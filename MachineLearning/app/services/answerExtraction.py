@@ -5,10 +5,11 @@ from bs4 import BeautifulSoup
 import json
 import os
 from markdown import markdown
+import requests
 
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
-RESOURCES_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'resources', 'model_files')
+RESOURCES_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'resources', 'model_files')
 CHUNKS_FILE = os.path.join(RESOURCES_DIR, 'chunks.json')
 INDEX_FILE = os.path.join(RESOURCES_DIR, 'faiss_index.index')
 os.makedirs(RESOURCES_DIR, exist_ok=True)
@@ -25,8 +26,6 @@ def preprocess_handbook(directory):
                     soup = BeautifulSoup(plain_text, "html.parser")
                     chunks.append(soup.get_text()) 
 
-    print(chunks[0])
-    print(len(chunks))
     #Generate embeddings for each chunk
     embeddings = model.encode(chunks) 
 
@@ -35,19 +34,45 @@ def preprocess_handbook(directory):
     index = faiss.IndexFlatL2(embedding_dim)  
     index.add(embeddings) 
 
-    print(f"FAISS index has {index.ntotal} vectors.")
 
     with open(CHUNKS_FILE, 'w') as f:
         json.dump(chunks, f)
 
     faiss.write_index(index, INDEX_FILE)
 
+def generate_summary(query, relevant_chunks, model_name="text-bison"):
+    # Construct the endpoint URL
+    endpoint = os.getenv("LLM_ENDPOINT") + os.getenv("LLM_API_KEY")
 
+    # Combine relevant chunks into a single input
+    chunks_text = "\n".join([f"- {chunk}" for chunk in relevant_chunks])
+    prompt = f"""
+    Query: {query}
+    Relevant Chunks:
+    {chunks_text}
+    Summarize the answer to the query based on the relevant chunks. Don't include any other information.
+    """
 
+    # Set up the request payload
+    payload = {"contents":[{"parts":[{"text":prompt}]}]}
+
+    # Set up the headers
+    headers = {
+        "Content-Type": "application/json", 
+    }
+
+    # Send the POST request
+    response = requests.post(endpoint, headers=headers, data=json.dumps(payload))
+
+    # Parse and return the response
+    if response.status_code == 200:
+        result = response.json()
+        return result["candidates"][0]["content"]["parts"][0]["text"]
+    else:
+        return "Answer extraction failed"
 
 
 def extractAnswerSummary(query):
-    print(query)
 
     with open(CHUNKS_FILE, 'r') as f:
         data_chunks = json.load(f)
@@ -60,12 +85,12 @@ def extractAnswerSummary(query):
     query_embedding = model.encode([query])  # Shape: (1, embedding_dim)
 
     #Perform similarity search
-    k = 3  # Number of most similar chunks to retrieve
+    k = 5# Number of most similar chunks to retrieve
     distances, indices = index.search(query_embedding, k)
 
     result = []
     # Step 3: Retrieve and print the results
-    print("Top results:")
     for idx, distance in zip(indices[0], distances[0]):
         result.append(data_chunks[idx])
-    return result[0]
+    answer = generate_summary(query, result)
+    return answer           
