@@ -7,6 +7,7 @@ import os
 from markdown import markdown
 import requests
 import git
+import asyncio
 
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
@@ -41,7 +42,7 @@ def fetch_resources():
         print(f'{len(chunks)} chunks fetched from {resource["repo"]}')
     return chunks
 
-def preprocess_resources():
+async def preprocess_resources():
     chunks = fetch_resources()
 
     print("Generating embeddings")
@@ -58,6 +59,7 @@ def preprocess_resources():
         json.dump(chunks, f)
 
     faiss.write_index(index, INDEX_FILE)
+    print("Preprocessing resources done")
 
 def generate_summary(query, relevant_chunks, model_name="text-bison"):
     # Construct the endpoint URL
