@@ -43,6 +43,7 @@ def fetch_resources():
     return chunks
 
 async def preprocess_resources():
+    await asyncio.sleep(int(os.getenv("PROCESS_RESOURCES_SLEEP", 60)))
     chunks = fetch_resources()
 
     print("Generating embeddings")
