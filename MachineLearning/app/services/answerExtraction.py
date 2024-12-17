@@ -7,7 +7,6 @@ import os
 from markdown import markdown
 import requests
 import git
-import asyncio
 
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
@@ -42,8 +41,7 @@ def fetch_resources():
         print(f'{len(chunks)} chunks fetched from {resource["repo"]}')
     return chunks
 
-async def preprocess_resources():
-    await asyncio.sleep(int(os.getenv("PROCESS_RESOURCES_SLEEP", 60)))
+def preprocess_resources():
     chunks = fetch_resources()
 
     print("Generating embeddings")
